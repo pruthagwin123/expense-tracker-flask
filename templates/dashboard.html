@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <h2 class="fw-bold text-center mb-4 text-primary">💰 Expense Dashboard</h2>
+  <!-- Month & Year Filter -->
+  <form method="get" action="{{ url_for('dashboard') }}" class="text-center mb-4">
+    <div class="d-inline-flex align-items-center gap-2">
+      <select name="month" class="form-select w-auto">
+        {% for m, name in months %}
+        <option value="{{ m }}" {% if m==selected_month %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="year" class="form-select w-auto">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+
+      <button class="btn btn-primary" type="submit">Filter</button>
+    </div>
+  </form>
+
+
+  <div class="row g-4">
+    <!-- Summary Card -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 rounded-4 p-3 text-center bg-light">
+        <h5 class="text-muted">Total Spent ({{ start }} → {{ end }})</h5>
+        <h2 class="fw-bold text-success mt-2">
+          ₹{{ values | sum }}
+        </h2>
+        <small class="text-secondary">Across {{ labels|length }} categories</small>
+      </div>
+
+      <!-- Add Category Form -->
+      <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
+        <h5 class="text-muted mb-3">Add Category</h5>
+        <form action="{{ url_for('category_add') }}" method="post" class="d-flex gap-2">
+          <input name="category_name" class="form-control" placeholder="Category name">
+          <button class="btn btn-outline-primary">Add</button>
+        </form>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
+        <h5 class="text-muted mb-3">Quick Actions</h5>
+        <div class="d-grid gap-2">
+          <a class="btn btn-primary" href="{{ url_for('expense_add') }}">➕ Add Expense</a>
+          <a class="btn btn-outline-success"
+            href="{{ url_for('export_csv', month=selected_month, year=selected_year) }}">
+            ⬇️ Export CSV
+          </a>
+
+          <a class="btn btn-outline-info" href="{{ url_for('report_pdf', month=selected_month, year=selected_year) }}">
+            📄 Download PDF
+          </a>
+
+          <a class="btn btn-outline-warning"
+            href="{{ url_for('email_monthly', month=selected_month, year=selected_year) }}">
+            ✉️ Email Summary
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart and Table -->
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <h5 class="text-muted mb-3">Expense Breakdown</h5>
+        <canvas id="chart" height="200"></canvas>
+        <script>
+          const labels = {{ labels| tojson }};
+          const values = {{ values| tojson }};
+          const ctx = document.getElementById('chart').getContext('2d');
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: values,
+                backgroundColor: [
+                  '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
+                ],
+                hoverOffset: 10
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { backgroundColor: '#222', titleColor: '#fff', bodyColor: '#fff' }
+              }
+            }
+          });
+        </script>
+      </div>
+
+      <!-- Expense Table -->
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h5 class="text-muted mb-3">Recent Expenses</h5>
+        <div class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="text-end">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if expenses %}
+              {% for e in expenses %}
+              <tr>
+                <td>{{ e.date }}</td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary">
+                    {{ e.category or 'Uncategorized' }}
+                  </span>
+                </td>
+                <td>{{ e.description }}</td>
+                <td class="text-end fw-semibold text-success">{{ e.amount }}</td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No expenses found for this period.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

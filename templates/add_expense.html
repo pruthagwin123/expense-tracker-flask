@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Add Expense{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow p-4">
+        <h4 class="mb-4 text-center text-primary">➕ Add New Expense</h4>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select name="category_id" class="form-select">
+              <option value="">Uncategorized</option>
+              {% for c in categories %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" name="amount" step="0.01" class="form-control" required placeholder="Enter amount">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control">
+            <div class="form-text">Select any date — even from a previous month.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input name="description" class="form-control" placeholder="E.g., Groceries, Travel, etc.">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Recurring</label>
+            <select name="recurring" class="form-select">
+              <option value="">None</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-success btn-lg">💾 Save Expense</button>
+          </div>
+        </form>
+
+        <div class="text-center mt-3">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">⬅ Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
